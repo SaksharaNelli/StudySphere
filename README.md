@@ -47,3 +47,16 @@ Service URLs default to localhost ports (see `.env.example` and each `src/index.
 They can be overridden with `AUTH_URL`, `ACADEMIC_URL`, `PLANNER_URL`, `SESSION_URL`, `NOTES_URL`,
 `NOTIFICATION_URL`, `ANALYTICS_URL`, `AI_URL`, which is how Docker Compose will wire the containers later.
 The frontend reads `VITE_API_URL` (default `http://localhost:8080/api`).
+
+## Run with Docker
+
+Requirements: Docker Desktop. Stop `npm run dev` first (the containers use the same ports 3000 and 8080).
+
+```bash
+docker compose up --build -d     # first build takes a few minutes
+docker compose ps                # every service should be "healthy"
+npm run seed                     # optional demo data (talks to the gateway on :8080)
+```
+
+Open http://localhost:3000. MySQL is exposed on port 3307 (user `root`, password `studysphere_root` unless `MYSQL_ROOT_PASSWORD` is set).
+Logs: `docker compose logs -f auth-service`. Stop: `docker compose down` (add `-v` to delete the database volume).

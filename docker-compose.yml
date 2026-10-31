@@ -1,0 +1,148 @@
+# StudySphere: MySQL + 8 microservices + API gateway + React frontend
+# Start:  docker compose up --build -d      Stop:  docker compose down   (add -v to wipe the database)
+name: studysphere
+
+x-service: &service
+  restart: unless-stopped
+  networks: [studysphere]
+  healthcheck:
+    test: ["CMD-SHELL", "wget -qO- http://localhost:$$PORT/health >/dev/null || exit 1"]
+    interval: 10s
+    timeout: 5s
+    retries: 10
+    start_period: 15s
+
+x-common-env: &common-env
+  JWT_SECRET: ${JWT_SECRET:-change-this-studysphere-secret}
+
+x-db-env: &db-env
+  <<: *common-env
+  DB_HOST: mysql
+  DB_PORT: "3306"
+  DB_USER: root
+  DB_PASSWORD: ${MYSQL_ROOT_PASSWORD:-studysphere_root}
+
+x-wait-mysql: &wait-mysql
+  mysql:
+    condition: service_healthy
+
+services:
+  mysql:
+    image: mysql:8.0
+    restart: unless-stopped
+    networks: [studysphere]
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-studysphere_root}
+    ports:
+      - "3307:3306"          # 3307 on your PC, so it does not clash with Windows MySQL on 3306
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -p$$MYSQL_ROOT_PASSWORD --silent"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+      start_period: 30s
+
+  auth-service:
+    <<: *service
+    build: ./services/auth-service
+    environment: { <<: *db-env, PORT: "4001" }
+    depends_on: *wait-mysql
+
+  academic-service:
+    <<: *service
+    build: ./services/academic-service
+    environment: { <<: *db-env, PORT: "4002" }
+    depends_on: *wait-mysql
+
+  planner-service:
+    <<: *service
+    build: ./services/planner-service
+    environment: { <<: *db-env, PORT: "4003", ACADEMIC_URL: "http://academic-service:4002" }
+    depends_on: *wait-mysql
+
+  session-service:
+    <<: *service
+    build: ./services/session-service
+    environment: { <<: *db-env, PORT: "4004" }
+    depends_on: *wait-mysql
+
+  notes-service:
+    <<: *service
+    build: ./services/notes-service
+    environment: { <<: *db-env, PORT: "4005" }
+    depends_on: *wait-mysql
+
+  notification-service:
+    <<: *service
+    build: ./services/notification-service
+    environment:
+      <<: *db-env
+      PORT: "4006"
+      AUTH_URL: http://auth-service:4001
+      ACADEMIC_URL: http://academic-service:4002
+      PLANNER_URL: http://planner-service:4003
+    depends_on: *wait-mysql
+
+  analytics-service:
+    <<: *service
+    build: ./services/analytics-service
+    environment:
+      <<: *common-env
+      PORT: "4007"
+      ACADEMIC_URL: http://academic-service:4002
+      SESSION_URL: http://session-service:4004
+
+  ai-service:
+    <<: *service
+    build: ./services/ai-service
+    environment:
+      <<: *common-env
+      PORT: "4008"
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      AI_MODEL: ${AI_MODEL:-claude-sonnet-5-5}
+
+  api-gateway:
+    <<: *service
+    build: ./services/api-gateway
+    environment:
+      <<: *common-env
+      PORT: "8080"
+      AUTH_URL: http://auth-service:4001
+      ACADEMIC_URL: http://academic-service:4002
+      PLANNER_URL: http://planner-service:4003
+      SESSION_URL: http://session-service:4004
+      NOTES_URL: http://notes-service:4005
+      NOTIFICATION_URL: http://notification-service:4006
+      ANALYTICS_URL: http://analytics-service:4007
+      AI_URL: http://ai-service:4008
+    ports:
+      - "8080:8080"
+    depends_on:
+      auth-service: { condition: service_healthy }
+      academic-service: { condition: service_healthy }
+      planner-service: { condition: service_healthy }
+      session-service: { condition: service_healthy }
+      notes-service: { condition: service_healthy }
+      notification-service: { condition: service_healthy }
+      analytics-service: { condition: service_healthy }
+      ai-service: { condition: service_healthy }
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        VITE_API_URL: ${VITE_API_URL:-http://localhost:8080/api}
+    restart: unless-stopped
+    networks: [studysphere]
+    ports:
+      - "3000:80"
+    depends_on:
+      api-gateway: { condition: service_healthy }
+
+networks:
+  studysphere:
+
+volumes:
+  mysql_data:
