@@ -1,0 +1,11 @@
+export const pad = (n) => String(n).padStart(2, '0');
+export const ymd = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+export const today = () => ymd(new Date());
+export const parse = (s) => new Date(s + 'T00:00:00');
+export const addDays = (s, n) => { const d = parse(s); d.setDate(d.getDate() + n); return ymd(d); };
+export const daysLeft = (s) => Math.round((parse(s) - parse(today())) / 864e5);
+export const fmtDate = (s) => (s ? parse(s).toLocaleDateString(undefined, { day: 'numeric', month: 'short' }) : '');
+export const fmtLong = (s) => parse(s).toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long' });
+export const relDay = (n) => (n < 0 ? `${-n}d overdue` : n === 0 ? 'Today' : n === 1 ? 'Tomorrow' : `In ${n} days`);
+export const hm = (min = 0) => { const h = Math.floor(min / 60), m = min % 60; return h ? `${h}h${m ? ' ' + m + 'm' : ''}` : `${m}m`; };
+export const COLORS = ['#6D4AFF', '#5B9DFF', '#B9A7FF', '#14A3B8', '#2FB67C', '#E8962A', '#E5576B'];

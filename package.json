@@ -1,0 +1,11 @@
+{
+  "name": "studysphere",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "setup": "node scripts/install-all.js",
+    "dev": "concurrently -n gateway,auth,academic,planner,sessions,notes,notify,analytics,ai,web -c blue,magenta,magenta,magenta,magenta,magenta,magenta,magenta,magenta,green \"npm --prefix services/api-gateway run dev\" \"npm --prefix services/auth-service run dev\" \"npm --prefix services/academic-service run dev\" \"npm --prefix services/planner-service run dev\" \"npm --prefix services/session-service run dev\" \"npm --prefix services/notes-service run dev\" \"npm --prefix services/notification-service run dev\" \"npm --prefix services/analytics-service run dev\" \"npm --prefix services/ai-service run dev\" \"npm --prefix frontend run dev\"",
+    "seed": "node scripts/seed.js"
+  },
+  "devDependencies": { "concurrently": "^9.0.1" }
+}

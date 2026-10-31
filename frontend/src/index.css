@@ -1,0 +1,20 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root { --c-page: 244 242 252; --c-surface: 255 255 255; --c-ink: 27 31 59; --c-muted: 107 113 148; --c-line: 230 227 245; --c-brand: 109 74 255; --c-soft: 237 232 255; --c-sky: 91 157 255; --c-navy: 20 23 58; }
+:root.dark { --c-page: 15 17 48; --c-surface: 25 28 69; --c-ink: 236 235 255; --c-muted: 154 157 200; --c-line: 42 46 102; --c-brand: 139 109 255; --c-soft: 42 36 104; --c-sky: 110 170 255; --c-navy: 10 12 38; }
+
+body { @apply bg-page text-ink font-sans antialiased; }
+h1, h2, h3 { font-family: 'Bricolage Grotesque', system-ui, sans-serif; letter-spacing: -0.01em; }
+:focus-visible { outline: 2px solid rgb(var(--c-brand)); outline-offset: 2px; }
+
+@layer components {
+  .card { @apply bg-surface rounded-2xl border border-line shadow-card; }
+  .btn { @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold transition-colors disabled:opacity-50; }
+  .btn-primary { @apply btn bg-brand text-white hover:bg-brand/90; }
+  .btn-ghost { @apply btn bg-soft text-brand hover:bg-soft/70; }
+  .btn-plain { @apply btn text-muted hover:bg-soft hover:text-brand; }
+  .input { @apply w-full rounded-xl border border-line bg-surface px-3 py-2 text-sm text-ink placeholder:text-muted/70 focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/20; }
+}
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
