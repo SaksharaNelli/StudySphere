@@ -5,7 +5,7 @@ const jwt = require('jsonwebtoken');
 const { createProxyMiddleware } = require('http-proxy-middleware');
 
 
-const PORT = process.env.GATEWAY_PORT || 8081;
+const PORT = process.env.GATEWAY_PORT || 8080;
 const SECRET = process.env.JWT_SECRET || 'studysphere-dev-secret';
 const U = {
   auth: process.env.AUTH_URL || 'http://localhost:4001',
